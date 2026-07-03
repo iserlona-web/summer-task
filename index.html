@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚔️ 暑假任務大對決 ⚔️</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --secondary: #F5A623;
+            --success: #7ED321;
+            --bg: #1A1D24; /* 改為酷炫的暗色調背景，更有對抗感 */
+            --card-bg: #FFFFFF;
+            --text: #333333;
+            --joy-color: #FF4081;
+            --archie-color: #00E5FF;
+        }
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* ⚔️ 階段一：首頁對決畫面 ⚔️ */
+        #versus-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            background: #000;
+        }
+        .vs-player {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.5s ease;
+        }
+        .vs-player img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.6; /* 讓照片帶點黑邊暗度，更有質感 */
+            transition: all 0.5s ease;
+        }
+        .vs-player:hover img {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+        .player-name {
+            position: relative;
+            z-index: 10;
+            font-size: 42px;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            letter-spacing: 2px;
+        }
+        /* 兩人的專屬對抗色調 */
+        .vs-joy { background: linear-gradient(to bottom, #880E4F, var(--joy-color)); }
+        .vs-archie { background: linear-gradient(to top, #006064, var(--archie-color)); }
+        
+        /* 中間的 VS 標籤 */
+        .vs-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            background: #E50914;
+            color: white;
+            font-style: italic;
+            font-weight: 900;
+            font-size: 24px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255,0,0,0.6);
+            border: 2px solid white;
+        }
+
+        /* 📝 階段二：任務回報主容器 📝 */
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            margin: 20px;
+            display: none; /* 初始隱藏，選完人才顯示 */
+        }
+        .tabs { display: flex; border-bottom: 2px solid #E0E0E0; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; text-align: center; background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: #888; }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* 頂部目前選手狀態欄 */
+        .current-hero-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            color: white;
+            font-weight: bold;
+        }
+        .back-to-vs-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* 任務格子樣式 */
+        .task-card { border: 1px solid #EAEAEA; border-radius: 15px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; background: #FAFAFA; }
+        .task-info { flex: 1; }
+        .task-title { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
+        .task-desc { font-size: 12px; color: #888; }
+        
+        .grid-group { display: flex; gap: 8px; margin-top: 5px; }
+        .grid-btn { flex: 1; height: 44px; border: 2px solid #DDD; background: #FFF; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; transition: all 0.2s; color: #666; }
+        .grid-btn.active { background: var(--secondary); border-color: var(--secondary); color: white; transform: scale(0.98); }
+        .grid-btn.sports-grid.active { background: #34A853; border-color: #34A853; color: white; }
+
+        .submit-btn { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; box-shadow: 0 5px 15px rgba(126, 211, 33, 0.3); }
+        .submit-btn:disabled { background: #CCC; box-shadow: none; }
+        .status-msg { text-align: center; margin-top: 15px; font-weight: bold; }
+
+        /* 看板樣式 */
+        .score-board { display: flex; gap: 15px; margin-bottom: 25px; }
+        .score-box { flex: 1; background: #FFFDE7; padding: 15px; border-radius: 15px; text-align: center; border: 2px solid #FFF59D; }
+        .score-box.blue { background: #E3F2FD; border-color: #90CAF9; }
+        .score-box h3 { margin: 0 0 5px 0; font-size: 14px; color: #555; }
+        .score-num { font-size: 28px; font-weight: bold; }
+        
+        .history-list { margin-top: 15px; }
+        .history-item { display: flex; justify-content: space-between; padding: 10px 5px; border-bottom: 1px dashed #DDD; font-size: 14px; }
+        .history-tag { padding: 2px 6px; border-radius: 5px; font-size: 11px; font-weight: bold; color: white; }
+        .tag-joy { background-color: var(--joy-color); }
+        .tag-archie { background-color: var(--archie-color); }
+        .pts-pos { color: #4CAF50; font-weight: bold; }
+        .pts-neg { color: #F44336; font-weight: bold; }
+        .loading { text-align: center; color: #888; padding: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="versus-screen">
+    <div class="vs-player vs-joy" onclick="enterDashboard('Joy')">
+        <img src="joy.jpg" alt="Joy">
+        <div class="player-name">👧 JOY</div>
+    </div>
+    <div class="vs-badge">VS</div>
+    <div class="vs-player vs-archie" onclick="enterDashboard('Archie')">
+        <img src="archie.jpg" alt="Archie">
+        <div class="player-name">👦 ARCHIE</div>
+    </div>
+</div>
+
+<div class="container" id="main-container">
+    <div class="current-hero-bar" id="hero-bar">
+        <span id="hero-title">挑戰者：Joy</span>
+        <button class="back-to-vs-btn" onclick="exitToVersus()">🔄 切換選手</button>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-btn-input" onclick="switchTab('input-tab')">📝 今日任務報到</button>
+        <button class="tab-btn" id="tab-btn-dash" onclick="switchTab('dashboard-tab'); fetchDashboardData();">🏆 戰況排行榜</button>
+    </div>
+
+    <div id="input-tab" class="tab-content active">
+        <div id="task-form">
+            <div class="task-card">
+                <div class="task-info"><div class="task-title">【學習】完成當日暑假作業</div><div class="task-desc">獲得 5 點</div></div>
+                <div class="grid-group" id="group-A01"><button class="grid-btn" onclick="toggleSingleGrid('A01')">👍 搞定作業！</button></div>
+            </div>
+            <div class="task-card">
+                <div class="task-info"><div class="task-title">【學習】自主閱讀</div><div class="task-desc">每10分鐘 1 點 (最高3點)</div></div>
+                <div class="grid-group" id="group-A02">
+                    <button class="grid-btn" onclick="toggleMultiGrid('A02', 1)">10 分</button>
+                    <button class="grid-btn" onclick="toggleMultiGrid('A02', 2)">20 分</button>
+                    <button class="grid-btn" onclick="toggleMultiGrid('A02', 3)">30 分</button>
+                </div>
+            </div>
+            <div class="task-card">
+                <div class="task-info"><div class="task-title">【運動】體能活動</div><div class="task-desc">每10分鐘 1 點 (最高5點)</div></div>
+                <div class="grid-group" id="group-A03">
+                    <button class="grid-btn sports-grid" onclick="toggleMultiGrid('A03', 1)">10 分</button>
+                    <button class="grid-btn sports-grid" onclick="toggleMultiGrid('A03', 2)">20 分</button>
+                    <button class="grid-btn sports-grid" onclick="toggleMultiGrid('A03', 3)">30 分</button>
+                    <button class="grid-btn sports-grid" onclick="toggleMultiGrid('A03', 4)">40 分</button>
+                    <button class="grid-btn sports-grid" onclick="toggleMultiGrid('A03', 5)">50 分</button>
+                </div>
+            </div>
+            <div class="task-card">
+                <div class="task-info"><div class="task-title">【音樂】練習樂器</div><div class="task-desc">每10分鐘 1 點 (最高3點)</div></div>
+                <div class="grid-group" id="group-A04">
+                    <button class="grid-btn" onclick="toggleMultiGrid('A04', 1)">10 分</button>
+                    <button class="grid-btn" onclick="toggleMultiGrid('A04', 2)">20 分</button>
+                    <button class="grid-btn" onclick="toggleMultiGrid('A04', 3)">30 分</button>
+                </div>
+            </div>
+            <div class="task-card">
+                <div class="task-info"><div class="task-title">【家事】完成指派家事</div><div class="task-desc">獲得 3 點 (洗碗、洗衣服等)</div></div>
+                <div class="grid-group" id="group-A05"><button class="grid-btn" onclick="toggleSingleGrid('A05')">🧹 家事做完了！</button></div>
+            </div>
+            <div class="task-card">
+                <div class="task-info"><div class="task-title">【常規】10:00 前準備睡覺</div><div class="task-desc">獲得 3 點</div></div>
+                <div class="grid-group" id="group-A06"><button class="grid-btn" onclick="toggleSingleGrid('A06')">🛏️ 準時上床！</button></div>
+            </div>
+            <button class="submit-btn" id="submit-btn" onclick="submitData()">發送今日戰果！</button>
+            <div class="status-msg" id="status-msg"></div>
+        </div>
+    </div>
+
+    <div id="dashboard-tab" class="tab-content">
+        <div class="score-board">
+            <div class="score-box" style="color: var(--joy-color);"><h3>👧 Joy 總積分</h3><div class="score-num" id="score-joy">--</div></div>
+            <div class="score-box blue" style="color: var(--archie-color);"><h3>👦 Archie 總積分</h3><div class="score-num" id="score-archie">--</div></div>
+        </div>
+        <h3>🏃 兩軍最新戰報動態 (近10筆)</h3>
+        <div id="history-container" class="loading">正在連線雲端銀行...</div>
+    </div>
+</div>
+
+<script>
+    var GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyAOmgIl7j2VilbG9c2BYY-RX9mkLaOXNOJtp54GvzORqlM4Jr5kq94X8BJDylyHcY/exec";
+
+    var currentChild = "";
+    var taskStates = { 'A01': 0, 'A02': 0, 'A03': 0, 'A04': 0, 'A05': 0, 'A06': 0 };
+
+    // 💡 點擊對決大圖：進入打卡頁面
+    function enterDashboard(name) {
+        currentChild = name;
+        document.getElementById('versus-screen').style.display = 'none';
+        document.getElementById('main-container').style.display = 'block';
+        
+        // 微調頂部提示列的顏色
+        var heroBar = document.getElementById('hero-bar');
+        var heroTitle = document.getElementById('hero-title');
+        if(name === 'Joy') {
+            heroBar.style.backgroundColor = 'var(--joy-color)';
+            heroTitle.innerText = "⚡ 當前挑戰者：👧 Joy";
+        } else {
+            heroBar.style.backgroundColor = 'var(--archie-color)';
+            heroTitle.innerText = "⚡ 當前挑戰者：👦 Archie";
+        }
+        switchTab('input-tab');
+        resetForm();
+    }
+
+    // 💡 退回對決首頁
+    function exitToVersus() {
+        document.getElementById('main-container').style.display = 'none';
+        document.getElementById('versus-screen').style.display = 'flex';
+        currentChild = "";
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        
+        if(tabId === 'input-tab') document.getElementById('tab-btn-input').classList.add('active');
+        if(tabId === 'dashboard-tab') document.getElementById('tab-btn-dash').classList.add('active');
+    }
+
+    function toggleSingleGrid(taskCode) {
+        var btn = document.getElementById('group-' + taskCode).getElementsByTagName('button')[0];
+        if (taskStates[taskCode] === 1) {
+            taskStates[taskCode] = 0;
+            btn.classList.remove('active');
+        } else {
+            taskStates[taskCode] = 1;
+            btn.classList.add('active');
+        }
+    }
+
+    function toggleMultiGrid(taskCode, index) {
+        var group = document.getElementById('group-' + taskCode);
+        var buttons = group.getElementsByTagName('button');
+        if (taskStates[taskCode] === index) {
+            taskStates[taskCode] = index - 1;
+        } else {
+            taskStates[taskCode] = index;
+        }
+        for (var i = 0; i < buttons.length; i++) {
+            if (i < taskStates[taskCode]) buttons[i].classList.add('active');
+            else buttons[i].classList.remove('active');
+        }
+    }
+
+    function resetForm() {
+        taskStates = { 'A01': 0, 'A02': 0, 'A03': 0, 'A04': 0, 'A05': 0, 'A06': 0 };
+        document.querySelectorAll('.grid-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('status-msg').innerText = "";
+    }
+
+    async function submitData() {
+        var submitBtn = document.getElementById('submit-btn');
+        var statusMsg = document.getElementById('status-msg');
+        submitBtn.disabled = true;
+        statusMsg.innerText = "正在傳送戰果至雲端...";
+        statusMsg.style.color = "orange";
+
+        var records = [];
+        for (var code in taskStates) {
+            if (taskStates[code] > 0) records.push({ code: code, mult: taskStates[code] });
+        }
+
+        if(records.length === 0) {
+            alert("你今天還沒有選擇任何完成的任務喔！");
+            submitBtn.disabled = false;
+            statusMsg.innerText = "";
+            return;
+        }
+
+        try {
+            for(var item of records) {
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ childName: currentChild, taskCode: item.code, multiplier: item.mult })
+                });
+            }
+            statusMsg.innerText = "🔥 戰果成功登錄！正在返回對決首頁...";
+            statusMsg.style.color = "green";
+            setTimeout(() => {
+                resetForm();
+                exitToVersus();
+            }, 2000);
+        } catch (error) {
+            statusMsg.innerText = "❌ 傳送失敗，請找老爸求助。";
+            statusMsg.style.color = "red";
+            submitBtn.disabled = false;
+        }
+    }
+
+    async function fetchDashboardData() {
+        var container = document.getElementById('history-container');
+        container.innerHTML = '<div class="loading">正在讀取最新戰況...</div>';
+        try {
+            var response = await fetch(GAS_WEB_APP_URL);
+            var data = await response.json();
+            
+            document.getElementById('score-joy').innerText = data.points['Joy'] || 0;
+            document.getElementById('score-archie').innerText = data.points['Archie'] || 0;
+            
+            if(data.history.length === 0) {
+                container.innerHTML = '<div class="loading">目前尚無戰火紀錄</div>';
+                return;
+            }
+            
+            var html = '<div class="history-list">';
+            for(var log of data.history) {
+                var tagClass = log.name === 'Joy' ? 'tag-joy' : 'tag-archie';
+                var ptsClass = Number(log.points) >= 0 ? 'pts-pos' : 'pts-neg';
+                var ptsSign = Number(log.points) >= 0 ? '+' : '';
+                
+                html += `
+                    <div class="history-item">
+                        <div>
+                            <span class="history-tag ${tagClass}">${log.name}</span>
+                            <span style="color:#BBB; margin-left:5px;">${log.timestamp}</span>
+                            <span style="margin-left:8px; font-weight:bold; color:#FFF;">${log.taskName}</span>
+                        </div>
+                        <div class="${ptsClass}">${ptsSign}${log.points} 點</div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        } catch (error) {
+            container.innerHTML = '<div class="loading" style="color:red;">❌ 無法連線戰報系統。</div>';
+        }
+    }
+</script>
+</body>
+</html>
